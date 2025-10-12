@@ -196,7 +196,61 @@ services:
     networks:
       - hadoop_network
     depends_on:
-      - spark-master      
+      - spark-master  
+
+  # --- HBASE SERVICES ---
+  zookeeper:
+    image: bde2020/zookeeper
+    container_name: zookeeper
+    restart: always
+    volumes:
+      - ./zoo-conf/zoo.cfg:/config/zoo.cfg
+    ports:
+      - "2181:2181"
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181              # Configuração de ambiente Obrigatória - Porta para os clientes conectarem
+      - ZOOKEEPER_SERVER_ID=1                   # Configuração de ambiente Obrigatória - Identificador do Nó
+      - ZOOKEEPER_SERVERS=zookeeper:2888:3888   # Configuração de ambiente Obrigatória - Portas para comunucação interna : eleição de líder
+    networks:
+      - hadoop_network
+    command: /app/bin/zkServer.sh start-foreground
+
+  hbase-master:
+    image: bde2020/hbase-master
+    container_name: hbase-master
+    hostname: hbase-master # Para evitar crise de identidade entre o master e o region-server, forçando o host ser o nome do container
+    restart: always
+    ports:
+      - "16010:16010" # UI do HBase Master
+    networks:
+      - hadoop_network
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 datanode:9864 zookeeper:2181"
+      HBASE_CONF_hbase_cluster_distributed: "true" # Se não colocar essa config ele roda standalone e o regionserver não entra 
+      HBASE_CONF_hbase_zookeeper_quorum: "zookeeper" # Para o hbase não procurar o zookeeper no localhost
+      HBASE_CONF_hbase_rootdir: "hdfs://namenode:9000/hbase" # Para o hbase saber onde colocar os descritores
+    depends_on:
+      - namenode
+      - datanode
+      - zookeeper    
+
+  hbase-regionserver:
+    image: bde2020/hbase-regionserver
+    container_name: hbase-regionserver
+    hostname: hbase-regionserver # Para evitar crise de identidade entre o master e o region-server, forçando o host ser o nome do container
+    restart: always
+    ports:
+      - "16030:16030" # UI do HBase RegionServer
+    networks:
+      - hadoop_network
+    environment:
+      SERVICE_PRECONDITION: "hbase-master:16010" # Se não colocar essa config ele roda standalone e o regionserver não entra 
+      HBASE_CONF_hbase_cluster_distributed: "true"
+      HBASE_CONF_hbase_zookeeper_quorum: "zookeeper" # Para o hbase não procurar o zookeeper no localhost
+      HBASE_CONF_hbase_regionserver_hostname: "hbase-regionserver" # Força a chamar pelo nome certo
+      HBASE_CONF_hbase_rootdir: "hdfs://namenode:9000/hbase" # Para o hbase saber onde colocar os descritores
+    depends_on:
+      - hbase-master
 
 volumes:
   hadoop_namenode:
