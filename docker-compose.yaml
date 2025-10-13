@@ -216,7 +216,11 @@ services:
     command: /app/bin/zkServer.sh start-foreground
 
   hbase-master:
-    image: bde2020/hbase-master
+    image: thedarklordottm/hbase-phoenix-master:1.0
+    # build: 
+    #   context: ./hbase-phoenix
+    #   args:
+    #     HBASE_IMAGE: bde2020/hbase-master:latest
     container_name: hbase-master
     hostname: hbase-master # Para evitar crise de identidade entre o master e o region-server, forçando o host ser o nome do container
     restart: always
@@ -229,13 +233,18 @@ services:
       HBASE_CONF_hbase_cluster_distributed: "true" # Se não colocar essa config ele roda standalone e o regionserver não entra 
       HBASE_CONF_hbase_zookeeper_quorum: "zookeeper" # Para o hbase não procurar o zookeeper no localhost
       HBASE_CONF_hbase_rootdir: "hdfs://namenode:9000/hbase" # Para o hbase saber onde colocar os descritores
+      HBASE_CLASSPATH: "/opt/phoenix/phoenix-4.14.1-HBase-1.2-server.jar" # para achar o jar
     depends_on:
       - namenode
       - datanode
       - zookeeper    
 
   hbase-regionserver:
-    image: bde2020/hbase-regionserver
+    image: thedarklordottm/hbase-phoenix-regionserver:1.0
+    # build: 
+    #   context: ./hbase-phoenix
+    #   args:
+    #     HBASE_IMAGE: bde2020/hbase-regionserver:latest
     container_name: hbase-regionserver
     hostname: hbase-regionserver # Para evitar crise de identidade entre o master e o region-server, forçando o host ser o nome do container
     restart: always
@@ -249,6 +258,7 @@ services:
       HBASE_CONF_hbase_zookeeper_quorum: "zookeeper" # Para o hbase não procurar o zookeeper no localhost
       HBASE_CONF_hbase_regionserver_hostname: "hbase-regionserver" # Força a chamar pelo nome certo
       HBASE_CONF_hbase_rootdir: "hdfs://namenode:9000/hbase" # Para o hbase saber onde colocar os descritores
+      HBASE_CLASSPATH: "/opt/phoenix/phoenix-4.14.1-HBase-1.2-server.jar"
     depends_on:
       - hbase-master
 
