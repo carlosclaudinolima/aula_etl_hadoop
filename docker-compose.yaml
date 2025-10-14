@@ -166,6 +166,7 @@ services:
 
   # --- SPARK SERVICES ---
   spark-master:
+    #image: bde2020/spark-master:2.4.5-hadoop2.7
     image: bde2020/spark-master:3.3.0-hadoop3.3
     container_name: spark-master
     restart: always
@@ -175,6 +176,7 @@ services:
     volumes:
       - ./jobs:/opt/spark/jobs # Pasta para colocar seus scripts/jars
       - ./hive-conf/hive-site.xml:/spark/conf/hive-site.xml # Para o spark saber onde está o hive (hive.metastore.uris)
+      - ./hbase-conf/hbase-site.xml:/spark/conf/hbase-site.xml
     networks:
       - hadoop_network
     environment:
@@ -186,11 +188,13 @@ services:
       - datanode
 
   spark-worker:
+    #image: bde2020/spark-worker:2.4.5-hadoop2.7
     image: bde2020/spark-worker:3.3.0-hadoop3.3
     container_name: spark-worker
     restart: always
     volumes:
       - ./hive-conf/hive-site.xml:/spark/conf/hive-site.xml # Para o spark saber onde está o hive (hive.metastore.uris)
+      - ./hbase-conf/hbase-site.xml:/spark/conf/hbase-site.xml
     environment:
       - SPARK_MASTER=spark://spark-master:7077
     networks:
@@ -269,3 +273,6 @@ volumes:
   mysql_data:
 networks:
   hadoop_network:
+
+  # https://hub.docker.com/r/gradiant/hbase-region
+  # https://hub.docker.com/r/elek/hbase-regionserver

@@ -21,12 +21,14 @@ def main():
 
     df_processed = df_raw.withColumnRenamed("id_cliente", "customer_id")
 
-    # --- MUDANÇA PRINCIPAL AQUI ---
+
     # 1. Definimos o nome da tabela e o caminho customizado na camada 'processed'
     processed_table_name = "clientes_processados"
     hdfs_processed_path = f"hdfs://namenode:9000/datalake/processed/{processed_table_name}"
-
+    
+    
     print(f"Salvando dados processados na tabela Hive '{processed_table_name}' no local: {hdfs_processed_path}")
+    
     
     # 2. Usamos .option("path", ...) para especificar o local
     df_processed.write \
@@ -42,7 +44,7 @@ def main():
     spark.table(processed_table_name).show(5)
 
     spark.stop()
-    print("Job concluído.")
+    print("Job concluido.")
 
 if __name__ == '__main__':
     main()
