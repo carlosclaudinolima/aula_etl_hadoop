@@ -17,7 +17,7 @@ def main():
 
     # 2. Definir o caminho para o nosso arquivo no HDFS
 
-    # hdfs_path = "hdfs://namenode:9000/datalake/raw/clientes/clientes.csv"
+    #hdfs_path = "hdfs://namenode:9000/datalake/raw/clientes/clientes.csv"
     hdfs_path = "hdfs://namenode:9000/datalake/raw/clientes/clientes.csv"
 
     # 3. Ler o arquivo CSV usando o Spark
@@ -36,7 +36,7 @@ def main():
 
     # 6. Encerrar a sessao
     spark.stop()
-    print("Job concluido.")
+    print("Job concluído.")
 
 
 if __name__ == "__main__":

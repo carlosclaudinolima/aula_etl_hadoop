@@ -166,8 +166,8 @@ services:
 
   # --- SPARK SERVICES ---
   spark-master:
-    #image: bde2020/spark-master:2.4.5-hadoop2.7
-    image: bde2020/spark-master:3.3.0-hadoop3.3
+    image: bde2020/spark-master:2.4.5-hadoop2.7
+    #image: bde2020/spark-master:3.3.0-hadoop3.3
     container_name: spark-master
     restart: always
     ports:
@@ -181,6 +181,7 @@ services:
       - hadoop_network
     environment:
       - INIT_DAEMON_STEP=setup_spark
+      - PYSPARK_PYTHON=python3
     env_file:
       - ./hadoop.env
     depends_on:
@@ -188,8 +189,8 @@ services:
       - datanode
 
   spark-worker:
-    #image: bde2020/spark-worker:2.4.5-hadoop2.7
-    image: bde2020/spark-worker:3.3.0-hadoop3.3
+    image: bde2020/spark-worker:2.4.5-hadoop2.7
+    #image: bde2020/spark-worker:3.3.0-hadoop3.3
     container_name: spark-worker
     restart: always
     volumes:
@@ -197,6 +198,7 @@ services:
       - ./hbase-conf/hbase-site.xml:/spark/conf/hbase-site.xml
     environment:
       - SPARK_MASTER=spark://spark-master:7077
+      - PYSPARK_PYTHON=python3
     networks:
       - hadoop_network
     depends_on:
