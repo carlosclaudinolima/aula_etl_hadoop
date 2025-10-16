@@ -12,10 +12,11 @@ USER root
 
 # Instala gcc, necessário para compilar os pacotes (Não deixe isso instalado em um ambiente de produção!), 
 # e o heimdal requerido para compilar o phoenixdb devido a um problema na distro
-RUN apt-get update && apt-get install -y --no-install-recommends gcc heimdal-dev && rm -rf /var/lib/apt/lists/*
+# pkg-config para a instalação do 
+RUN apt-get update && apt-get install -y --no-install-recommends gcc heimdal-dev pkg-config && rm -rf /var/lib/apt/lists/*
 
-# Pil e Drivers para os principais bancos. Infelizmente a instalação do driver mysqlclient não foi possível no momento
-RUN uv pip install Pillow psycopg2 sqlalchemy-phoenix phoenixdb pyhive oracledb pymssql  thrift thrift_sasl
+# Pil e Drivers para os principais bancos. 
+RUN uv pip install Pillow psycopg2 sqlalchemy-phoenix phoenixdb pyhive oracledb pymssql  mysqlclient thrift thrift_sasl
 # six
 
 
