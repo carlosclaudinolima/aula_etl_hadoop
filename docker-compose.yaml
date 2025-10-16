@@ -314,7 +314,7 @@ services:
       - hadoop_network
 
   superset:
-    #image: thedarklordottm/superset:latest
+    image: thedarklordottm/superset:latest
     # docker-compose run --rm superset /app/docker/docker-init.sh não está sendo necessário pois o db já é criado, mas
     # tem que rodar estes comandos antes de iniciar o container, com o superset-db e o superset-redis iniciados
     # já que o  superset só cria as tabelas, mas não popula e nem cria o usuário e suas permissoes:
