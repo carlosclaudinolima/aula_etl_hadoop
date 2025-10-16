@@ -259,8 +259,8 @@ services:
     networks:
       - hadoop_network
     environment:
-      SERVICE_PRECONDITION: "hbase-master:16010" # Se não colocar essa config ele roda standalone e o regionserver não entra 
-      HBASE_CONF_hbase_cluster_distributed: "true"
+      SERVICE_PRECONDITION: "hbase-master:16010" 
+      HBASE_CONF_hbase_cluster_distributed: "true" # Se não colocar essa config ele roda standalone e o regionserver não entra 
       HBASE_CONF_hbase_zookeeper_quorum: "zookeeper" # Para o hbase não procurar o zookeeper no localhost
       HBASE_CONF_hbase_regionserver_hostname: "hbase-regionserver" # Força a chamar pelo nome certo
       HBASE_CONF_hbase_rootdir: "hdfs://namenode:9000/hbase" # Para o hbase saber onde colocar os descritores
@@ -314,17 +314,21 @@ services:
       - hadoop_network
 
   superset:
-    #image: apache/superset
-    # Tem que rodar estes comandos antes de iniciar o container, com o superset-db e o superset-redis iniciados
-    # docker-compose run --rm superset /app/docker/docker-init.sh
-    # pip install sqlalchemy==1.2.18 && superset db upgrade
+    #image: thedarklordottm/superset:latest
+    # docker-compose run --rm superset /app/docker/docker-init.sh não está sendo necessário pois o db já é criado, mas
+    # tem que rodar estes comandos antes de iniciar o container, com o superset-db e o superset-redis iniciados
+    # já que o  superset só cria as tabelas, mas não popula e nem cria o usuário e suas permissoes:
+    # superset db upgrade
     # superset fab create-admin
     # superset init
+    # Conectar no hbase usando phoenix://zookeeper:2181/
+    # Ou docker exec -d hbase-master /opt/phoenix/bin/queryserver.py start
+    # depois phoenix://hbase-master:8765/ no superset
     container_name: superset
     build: 
-      context: ./superset-psycopg
-      args:
-        SUPERSET_IMAGE: apache/superset:latest    
+       context: ./superset-psycopg
+       args:
+         SUPERSET_IMAGE: apache/superset:latest    
     restart: always
     ports:
       # A porta interna do Superset é 8088, mas já está em uso pelo YARN.
@@ -340,7 +344,7 @@ services:
       - ./superset-conf/superset_config.py:/app/superset_config.py
       - ./superset-conf/requirements.txt:/app/requirements-local.txt
     environment:
-      #- SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://superset:superset@superset-db:5432/superset
+      
       - POSTGRES_DB=superset
       - CYPRESS_CONFIG="false"
       #- DATABASE_DIALECT="postgres"
