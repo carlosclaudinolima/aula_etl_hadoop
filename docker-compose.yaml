@@ -267,14 +267,96 @@ services:
       HBASE_CLASSPATH: "/opt/phoenix/phoenix-4.14.1-HBase-1.2-server.jar"
     depends_on:
       - hbase-master
+  
+
+  # ------------------------------------------------------------------
+  # CAMADA DE AUTOMAÇÃO DE WORKFLOW
+  # ------------------------------------------------------------------
+  n8n:
+    image: n8nio/n8n
+    container_name: n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - hadoop_network
+    environment:
+      # Define o fuso horário para o n8n usar nos agendamentos
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+
+# ------------------------------------------------------------------
+  # CAMADA DE VISUALIZAÇÃO DE DADOS (BI)
+  # ------------------------------------------------------------------
+  superset-db:
+    image: postgres:14
+    container_name: superset-db
+    restart: always
+    environment:
+      - POSTGRES_DB=superset
+      - POSTGRES_USER=superset
+      - POSTGRES_PASSWORD=superset
+    ports:
+      - "5432:5432"
+    volumes:
+      - superset_db_data:/var/lib/postgresql/data
+    networks:
+      - hadoop_network
+
+  superset-redis:
+    image: redis:7
+    container_name: superset-redis
+    restart: always
+    volumes:
+      - superset_redis_data:/data
+    networks:
+      - hadoop_network
+
+  superset:
+    #image: apache/superset
+    # Tem que rodar estes comandos antes de iniciar o container, com o superset-db e o superset-redis iniciados
+    # docker-compose run --rm superset /app/docker/docker-init.sh
+    # pip install sqlalchemy==1.2.18 && superset db upgrade
+    # superset fab create-admin
+    # superset init
+    container_name: superset
+    build: 
+      context: ./superset-psycopg
+      args:
+        SUPERSET_IMAGE: apache/superset:latest    
+    restart: always
+    ports:
+      # A porta interna do Superset é 8088, mas já está em uso pelo YARN.
+      # Mapeamos para a porta 8090 na nossa máquina.
+      - "8090:8088"
+    depends_on:
+      - superset-db
+      - superset-redis
+      - zookeeper # Adicionamos para garantir a ordem de inicialização
+    networks:
+      - hadoop_network
+    volumes:
+      - ./superset-conf/superset_config.py:/app/superset_config.py
+      - ./superset-conf/requirements.txt:/app/requirements-local.txt
+    environment:
+      #- SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://superset:superset@superset-db:5432/superset
+      - POSTGRES_DB=superset
+      - CYPRESS_CONFIG="false"
+      #- DATABASE_DIALECT="postgres"
+      - SQLALCHEMY_DATABASE_URI=postgresql://superset:superset@superset-db:5432/superset
+      - SUPERSET_SECRET_KEY=uma_chave_secreta_super_longa_e_aleatoria
+      - CACHE_CONFIG_CACHE_TYPE=redis
+      - CACHE_CONFIG_CACHE_REDIS_URL=redis://superset-redis:6379/0
+      - SUPERSET_CONFIG_PATH=/app/superset_config.py
 
 volumes:
   hadoop_namenode:
   hadoop_datanode:
   pg_metastore_data:
   mysql_data:
+  n8n_data:
+  superset_db_data:
+  superset_redis_data:
 networks:
   hadoop_network:
-
-  # https://hub.docker.com/r/gradiant/hbase-region
-  # https://hub.docker.com/r/elek/hbase-regionserver
